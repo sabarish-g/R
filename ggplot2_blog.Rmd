@@ -1,0 +1,81 @@
+---
+title: "ggplot2"
+author: "Sabarish"
+date: "17 June 2016"
+output: html_document
+---
+
+# Graphs and visualisations with R
+
+R has a very powerful package called ggplot2 developed by Mr Hadley Wickham who is the chief scientist at R Studio. He has also created other packages like dplyr which I will discuss in a separate blogpost. 
+His book ggplot2 is available here - ggplot2 book by Hadley Wickham
+
+So, first let us discuss why are graphs useful?
+Mainly because, you don't need to look at the entire data to arrive at a judgement about the data. This saves you a lot of time. Imagine having 10000 rows of data for 10 years of revenues of your company!
+It allows you to understand the overall trend of the data without actually looking at the data at all.
+It allows you a good summary of the current situation of the data and aids better understanding of the data.
+
+So what is ggplot2 and how is it different from inbuilt graphics of R?
+
+ggplot2 is built on the principles of grammar of graphics. It basically builds the graphic layer by layer.
+Think of it as the composition of your salad: While making the salad, first you add the veggies, then the dressing, then spices etc.
+Similarly, in ggplot2; you first add what you want to plot known as the aesthetics, then you add the title of the graph, then the title of the axes etc.
+But remember, it is very well possible to eat your salad without the dressing or spices as per you preferences. Similarly, you can have a plot without the title and the axes names. That is the beauty of ggplot2, you can simply have whatever you want!
+
+Below are some of the basic codes in R.
+First I will call the library ggplot2. 
+If you haven't installed it yet, you can install it on your R Studio by going to the window where you see Files, Plots, Packages, Help and Viewer and there search for ggplot2 in you Packages.
+
+Or simply run the following command on your console:
+install.packages("ggplot2", dependencies = TRUE)    
+```{r}
+library(ggplot2)
+```   
+There is an inbuilt data set in R called the diamonds dataset. For more information:    
+```{r}
+?diamonds
+```   
+
+Lets now observe the quality of cut versus the number of diamonds that belong to a certain quality.
+So I call the ggplot function, enter name of the dataset. For the aesthetics, I give what I want on the x axis. When I don't specify what I want on the y axis, it by default takes as the count of whatever is there on the x axis, just like any other graphic tool. Now the '+' function indicates what sort of a graph I want. There are many options but here I will use the bar chart.   
+```{r}
+ggplot(diamonds, aes(x=cut))+geom_bar()
+```   
+
+Here are few other examples:
+```{r}
+ggplot(diamonds, aes(x=x, y = price))+geom_point()
+ggplot(diamonds, aes(x=y, y = price))+geom_point()
+ggplot(diamonds, aes(x=z, y = price))+geom_point()
+```   
+
+Here is another small dataset which is useful for plotting:   
+```{r}
+?BOD
+```   
+Here I show you how to post the axes labels and the title to the plot   
+```{r}
+ggplot(BOD,aes(x=as.factor(Time),y=demand))+geom_bar(stat="identity",col = "red", fill = 10)+xlab("Time")+ylab("Demand")+ggtitle("Demand as a function of Time")
+```   
+Going back to the Diamonds dataset:   
+```{r}
+ggplot(diamonds,aes(x=cut,fill = clarity))+geom_bar(col = "black",position = "dodge")
+```   
+Here's another dataset for top hitters in 2001 in MLB season available in the gcookbook library   
+```{r}
+library(gcookbook)
+ggplot(tophitters2001[1:25,],aes(x=avg,y=name))+geom_point()
+```   
+You can also flip coordinates by using the flipping function    
+```{r}
+library(gcookbook)
+ggplot(tophitters2001[1:25,],aes(x=avg,y=name))+geom_point()+coord_flip()
+```   
+Another dataset is the US Population change dataset in the library gcookbook.
+Suppose we want to colour to change as per the region of colour. Since it is a variable we put it inside the aesthetic rather than in geom bar
+manually change the colour of the bars.
+This is as complex a plot as it can get. But look at the syntax. It is so easy. Everything between the two '+' signs are separate commands for the data.    
+```{r}
+library(gcookbook)
+?uspopchange
+ggplot(uspopchange[1:25,],aes(x=reorder(Abb,Change),y=Change,fill=Region))+geom_bar(stat="Identity")+scale_fill_manual(values=c("Orange","yellow", 3, 10))+ggtitle("US Population Change")  
