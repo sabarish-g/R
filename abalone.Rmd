@@ -1,0 +1,134 @@
+---
+title: "Linear And Logistic Regression using R"
+author: "Sabarish"
+date: "20 May 2016"
+output: html_document
+---
+#__ABALONE__   
+Abalone is the first dataset in the UCI repository. I have built a linear regression to predict the age of an Abalone given certain dimensions and a logistic regression to predict its sex given other information.
+
+Description from the UCI Site:
+Predict the age of the Abalone using the various information given. Predicting the age of abalone from physical measurements.  The age of abalone is determined by cutting the shell through the cone, staining it,#and counting the number of rings through a microscope -- a boring and time-consuming task.  Other measurements, which are easier to obtain, are used to predict the age.    
+
+Now, we load the dataset into R.    
+```{r}
+setwd("C:/Users/Sabarish/Desktop/BDAP/R/UCI_Machine_Learning")
+abalone <-read.csv("abalone_age_predict.csv", header = T)
+abalone <- na.omit(abalone)
+summary(abalone)
+```
+This is the exploratory data analysis part. You check for all possible 2D plots here.
+```{r}
+pairs(abalone)
+```    
+Check whether data is skewed or biased towards one sex. Check if males are more than females and infants in the data that is provided    
+```{r}
+summary(abalone$Sex)
+mean(abalone[which(abalone$Sex == "F"),9])
+mean(abalone[which(abalone$Sex == "M"),9])
+mean(abalone[which(abalone$Sex != "M" | abalone$Sex != "F"),9])
+```  
+Check the correlations using the library corrplot. Remember to remove all columns that are factors.    
+```{r}
+library(corrplot)
+x <-cor(abalone[,-1])
+corrplot(x,method = "number")
+```
+Split the data into testing and training data.    
+```{r}
+#Split the data
+train <- sample(1:3783,3000)
+test <- -train
+
+training_data <- abalone[train,]
+testing_data <- abalone[test,]
+```
+##Linear Regression
+Predict the number of rings given all other parameters    
+Build the linear regression model.    
+```{r}
+model <- lm(Rings ~., data = training_data)
+summary(model)
+```
+What is the mean squared error. Our aim is to minimise it.    
+```{r}
+#calculate the MSE
+predicted_y <- predict(model,newdata = testing_data)
+actual_y <- testing_data[,9]
+error <- actual_y - predicted_y
+error_squared <- error^2
+mean(error_squared)
+```
+You'd have to try every possible model before you reach a final conclusion on the best possible model. Thankfully there is a package that helps you do even that!
+```{r}
+library(leaps)
+regfit.full=regsubsets(Rings~.,abalone)
+sum <- summary(regfit.full)
+names(sum)
+sum$rsq
+```   
+How to interpret the table having the star's in it? 
+The first column indicates the number of variables in the model. And wherever there is a star present, it indicates that that variable is present in that model.
+This helps us to determine and map which model has how many variables and the best possible variables for the given number of variables in the model.    
+
+## Logistic Regression
+
+### __Predict the sex of a abalone given its different dimensions__   
+Here the predicted variable is going to be the sex of the abalone.    
+```{r}
+pairs(abalone)
+summary(abalone$Sex)
+library(corrplot)
+x <-cor(abalone[,-1])
+corrplot(x,method = "number")
+```
+
+Split the data    
+```{r}
+train <- sample(1:3783,3000)
+test <- -train
+
+training_data <- abalone[train,]
+testing_data <- abalone[test,]
+
+library(foreign)
+library(nnet)
+#build the model
+model_sex <- multinom(Sex ~ ., data= abalone)
+summary(model_sex)
+
+predicted_sex <- predict(model_sex,newdata = testing_data)
+predicted_sex <- as.factor(predicted_sex)
+actual_sex <- testing_data$Sex
+table(predicted_sex,actual_sex)
+```
+
+###__Classifying the sex of the abalone using Naive Bayes__    
+```{r}
+library(mlbench)
+library(e1071)
+model_nb <- naiveBayes(Sex ~ -Length -Diameter -Viscera.weight, data = abalone)
+summary(model_nb)
+predicted_nb <- predict(model_nb, newdata = testing_data)
+actual_nb <- testing_data$Sex
+table(predicted_nb,actual_nb)
+```
+Here we see that the values in the diagonal of the matrix are the ones that have been correctly classified by the NB algorithm. The rest are the misclassification.
+From the output we can see that the major problem is that many females are being wrongly classified as males.
+
+###__Classifying the sex of the abalone using KNN Classification__   
+We are classifying them as Males, Females and Infants, so the value of k here will be 3.
+```{r}
+actual_knn <- abalone$Sex
+training_knn <- actual_knn[train]
+testing_knn <- actual_knn[test]
+library(class)
+model_knn <- knn(train = training_data[,-1], test = testing_data[,-1], cl = training_knn, k = 3)
+
+summary(model_knn)
+mean(model_knn == testing_knn)
+table(model_knn, testing_knn)
+```
+Here we see that the values in the diagonal of the matrix are the ones that have been correctly classified by the KNN algorithm. The rest are the misclassification.
+From the output we can see that the major problem is that many females are being wrongly classified as males.
+
